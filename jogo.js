@@ -67,7 +67,7 @@ function novoJogo(){
             this.palavra.tamanho = palavra.length;
             this.acerto = '';
 
-            this.palavra.semAcentos = this.palavra.original.normalize('NFD').replace(/[\u0300- \u036f]/g, '');
+            this.palavra.semAcentos = this.palavra.original.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             this.palavra.dica = dica;
 
             for (let i = 0; i < this.palavra.tamanho; i++) {
@@ -103,16 +103,114 @@ function novoJogo(){
         },
         emAndamento: false,
         
-    };  
+    }; 
+    elementos.telaInicial.style.display = 'flex';
+    elementos.telaCadastro.style.display = 'none';
+    elementos.telaJogo.style.display = 'none';
+    elementos.telaMensagem.style.display = 'none';
+    elementos.telaMensagem.classList.remove('mensagem-vitoria');
+    elementos.telaMensagem.classList.remove('mensagem-derrota');
+
+    for (const parte of elementos.boneco) {
+        parte.classList.remove('escondido');
+        parte.classList.add('escondido')
+    }
+
+    criarTeclado();
+}
+novoJogo();
+
+function selecionarLetra(Letra){
+    if (!jogo.jogadas.includes(Letra) && !jogo.acabou()) {
+        const acertou = jogo.jogar(Letra);
+
+        jogo.jogadas.push(Letra);
+
+        const button = document.querySelector(`botao-${Letra}`);
+        button.classList.add(acertou ? 'certo':'errado');
+
+        mostrarPalavra();
+
+        if (!acertou) {
+            mostrarErro();
+        }
+
+        if (jogo.ganhou()) {
+            mostrarMensagem(true);
+        }
+        else if (jogo.perdeu()) {
+            mostrarMensagem(false);
+        }
+    }
 }
 function criarTeclado(){
-    
-}
-function mostrarErro(){
+    const letras = ['a', 'b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
 
+    elementos.teclado.textContent = '';
+
+    for(const letra of letras){
+        const button = document.createElement('button');
+
+        button.appendChild(document.createTextNode(letra.toUpperCase()));
+        button.classList.add(`botao-${letra}`);
+        elementos.teclado.appendChild(button);
+        button.addEventListener('click', () => {
+            selecionarLetra(letra);
+        });
+    }
+}
+function sortearPalavra(){
+    const i = Math.floor(Math.random() * palavras[jogo.dificuldade].length);
+
+    const palavra = palavras[jogo.dificuldade][i].palavra;
+    const dica = palavras[jogo.dificuldade][i].dica;
+
+    jogo.definirPalavra(palavra, dica);
+
+    console.log(jogo.palavra.original);
+    console.log(jogo.palavra.dica);
+
+    return jogo.palavra.original;
+}
+function mostrarPalavra(){
+    elementos.dica.textContent = jogo.palavra.dica;
+
+    elementos.palavra.textContent = '';
+
+    for (let i = 0; i < array.length; i++) {
+        const letra = jogo.acertos[i].toUpperCase();
+
+        elementos.palavra.innerHTML += `<div class="letra-${i}">${letra}</div>`;
+    }
+}
+function iniciarJogo(dificuldade){
+    jogo.dificuldade = dificuldade;
+
+    elementos.telaInicial.style.display = 'none';
+    elementos.telaJogo.style.display = 'flex';
+
+    jogo.emAndamento = true;
+
+    sortearPalavra();
+
+    mostrarPalavra();
+}
+
+elementos.botoes.facil.addEventListener('click', () => iniciarJogo('facil'));
+function mostrarErro(){
+    const parte = elementos.boneco[5 - jogo.chance];
+
+    parte.classList.remove('escondido');
 }
 function mostrarMensagem(vitoria){
+    const mensagem = vitoria ? '<p>Parebens</p><p>voce ganhou</p>':'<p>Voce perdeu</p>';
 
+    elementos.textoMensagem.innerHTML = mensagem;
+
+    elementos.telaMensagem.style.display = 'flex';
+
+    elementos.telaMensagem.classList.add(`mensagem-${vitoria ? 'vitoria':'derrota'}`);
+    jogo.emAndamento = false;
 }
 function abrirTelaCadastroPalavra(){
 
@@ -123,19 +221,6 @@ function voltarInicio(){
 function cadastrarPalavra(){
 
 }
-function sortearPalavra(){
-
-}
-function mostrarPalavra(){
-
-}
-function selecionarLetra(Letra){
-
-}
-function iniciarJogo(dificuldade){
-
-}
-
 function substituirCaractere(str, indice, novoCaractere){
     const parteAntes = str.substring(0, indice);
     const parteDepois = str.substring(indice + 1);
